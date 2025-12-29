@@ -1,0 +1,22 @@
+# Core API Framework
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+
+# Database Layer (Consolidated)
+sqlalchemy
+psycopg2-binaryr
+pgvector  # Vector support for SQLAlchemy
+alembic
+
+# Fast Data Layer
+redis          # Python Redis client
+
+# AI & Processing
+openai         # For generating embeddings (initially)
+# vllm                  # (Commented out until we reach Phase 3 to save install time)
+
+# Utilities
+python-dotenv
+httpx
