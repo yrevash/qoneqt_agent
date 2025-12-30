@@ -1,3 +1,10 @@
 .env
 venv/
 alembic.ini
+app/__pycache__/
+app/core/__pycache__/
+app/modules/identity/__pycache__/
+app/modules/recsys/__pycache__/
+alembic/versions/__pycache__/
+__pycache__/
+alemvic/__pycache__

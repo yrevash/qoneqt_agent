@@ -6,7 +6,8 @@ pydantic-settings
 
 # Database Layer (Consolidated)
 sqlalchemy
-psycopg2-binaryr
+asyncpg        # Async PostgreSQL driver
+psycopg2-binary
 pgvector  # Vector support for SQLAlchemy
 alembic
 
@@ -20,3 +21,5 @@ openai         # For generating embeddings (initially)
 # Utilities
 python-dotenv
 httpx
+asyncpg
+sentence-transformers
