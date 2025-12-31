@@ -19,12 +19,17 @@ class User(Base):
     # Profile & Brain
     bio: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     
+    #  METADATA COLUMNS FOR HYBRID SEARCH ---
+    # Used for "Hard Filtering" (WHERE clauses)
+    location: Mapped[Optional[str]] = mapped_column(String, index=True, nullable=True)
+    role: Mapped[Optional[str]] = mapped_column(String, index=True, nullable=True) 
+    skills: Mapped[Optional[List[str]]] = mapped_column(ARRAY(String), nullable=True)
+
     # OPEN SOURCE SOTA: all-mpnet-base-v2 (768 dimensions)
     interest_vector: Mapped[Optional[List[float]]] = mapped_column(Vector(768), nullable=True)
     
     # Scheduler
-    activity_schedule: Mapped[Optional[List[float]]] = mapped_column(ARRAY(Float), nullable=True)
-    
+    activity_schedule: Mapped[Optional[List[float]]] = mapped_column(ARRAY(Float), nullable=True)    
     # Meta
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

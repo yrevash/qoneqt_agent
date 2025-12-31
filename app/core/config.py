@@ -19,7 +19,15 @@ class Settings(BaseSettings):
     #Redis
     REDIS_HOST: str
     REDIS_PORT: int = 6379
-    
+    # RabbitMQ
+    RABBITMQ_USER: str = "guest"
+    RABBITMQ_PASSWORD: str = "guest"
+    RABBITMQ_HOST: str = "localhost"
+    RABBITMQ_PORT: int = 5672
+
+    @computed_field
+    def RABBITMQ_URL(self) -> str:
+        return f"amqp://{self.RABBITMQ_USER}:{self.RABBITMQ_PASSWORD}@{self.RABBITMQ_HOST}:{self.RABBITMQ_PORT}/" 
         
     @computed_field
     def SQLALCHEMY_DATABASE_URI(self) -> PostgresDsn:

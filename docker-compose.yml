@@ -1,9 +1,9 @@
 services:
   # ---------------------------------------------------------------------------
-  # Layer 1: The Consolidated "Truth" DB (Postgres + pgvector)
+  #  The Consolidated "Truth" DB (Postgres + pgvector)
   # ---------------------------------------------------------------------------
   db:
-    image: pgvector/pgvector:pg16  # Official Postgres 16 image with pgvector pre-installed
+    image: pgvector/pgvector:pg16
     container_name: qoneqt_db
     restart: always
     environment:
@@ -14,7 +14,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./scripts/db_init:/docker-entrypoint-initdb.d # Auto-runs SQL scripts on first startup
+      - ./scripts/db_init:/docker-entrypoint-initdb.d
     networks:
       - qoneqt_net
     healthcheck:
@@ -24,7 +24,7 @@ services:
       retries: 5
 
   # ---------------------------------------------------------------------------
-  # Layer 2: The Fast Data Layer (Redis for Cache, Queue, Graph, Cost Governor)
+  #  Fast Data (Redis)
   # ---------------------------------------------------------------------------
   redis:
     image: redis:alpine
@@ -34,7 +34,7 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes  # Enable persistence
+    command: redis-server --appendonly yes
     networks:
       - qoneqt_net
     healthcheck:
@@ -44,7 +44,28 @@ services:
       retries: 5
 
   # ---------------------------------------------------------------------------
-  # Tooling: Database GUI (Adminer)
+  #  Message Queue (RabbitMQ) 
+  # ---------------------------------------------------------------------------
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: qoneqt_mq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "5672:5672"   # AMQP Protocol
+      - "15672:15672" # Management UI (http://localhost:15672)
+    networks:
+      - qoneqt_net
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Tooling
   # ---------------------------------------------------------------------------
   adminer:
     image: adminer
