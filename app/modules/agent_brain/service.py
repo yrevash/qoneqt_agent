@@ -15,16 +15,11 @@ class InferenceService:
     """
     
     def __init__(self):
-        # We use a direct HTTP Client to avoid bloat from heavy SDKs
-        # Assumption: vLLM is running at the URL defined in settings
-        self.model_url = "http://vllm:8000/v1/chat/completions"
-        self.model_name = "Qwen/Qwen2.5-7B-Instruct" 
-        self.headers = {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer ignore-me" 
-        }
-        # Timeout is crucial for production stability
-        self.timeout = httpx.Timeout(30.0, connect=5.0)
+        # Using Ollama on host
+        self.model_url = f"{settings.OLLAMA_HOST}/api/chat"
+        self.model_name = settings.OLLAMA_MODEL
+        # Longer timeout for vision/larger models
+        self.timeout = httpx.Timeout(300.0, connect=10.0)
 
     async def decide_on_candidate(
         self, 
@@ -38,14 +33,16 @@ class InferenceService:
             # 1. Build Prompt
             messages = PromptTemplates.build_screener_prompt(agent_profile, candidate_profile)
             
-            # 2. Call Inference Engine (vLLM)
+            # 2. Call Inference Engine (Ollama)
             payload = {
                 "model": self.model_name,
                 "messages": messages,
-                "temperature": 0.7,
-                "max_tokens": 500,
-                # JSON Mode ensures the model tries to output valid JSON
-                "response_format": {"type": "json_object"} 
+                "stream": False,
+                "format": "json",
+                "options": {
+                    "temperature": 0.7,
+                    "num_predict": 500,
+                }
             }
 
             logger.info(f"Brain Thinking... (Agent: {agent_profile['full_name']} -> Candidate: {candidate_profile['full_name']})")
@@ -53,13 +50,15 @@ class InferenceService:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 response = await client.post(
                     self.model_url, 
-                    json=payload, 
-                    headers=self.headers
+                    json=payload
                 )
                 response.raise_for_status()
                 
             result_json = response.json()
-            raw_content = result_json['choices'][0]['message']['content']
+            raw_content = result_json['message']['content']
+            
+            # Debug: print raw response
+            print(f"DEBUG Raw Response: {raw_content[:500]}...")
 
             # 3. Parse & Validate (The Safety Guardrail)
             decision_data = self._clean_and_parse_json(raw_content)

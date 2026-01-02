@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     RABBITMQ_PASSWORD: str = "guest"
     RABBITMQ_HOST: str = "localhost"
     RABBITMQ_PORT: int = 5672
+    
+    # Ollama LLM
+    OLLAMA_HOST: str = "http://localhost:11434"
+    OLLAMA_MODEL: str = "qwen3-vl:8b"
 
     @computed_field
     def RABBITMQ_URL(self) -> str:

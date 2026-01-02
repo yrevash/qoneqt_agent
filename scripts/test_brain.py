@@ -51,10 +51,10 @@ async def test_brain():
     decision_bad = await inference_service.decide_on_candidate(MOCK_AGENT, MOCK_CANDIDATE_BAD)
     
     if decision_bad:
-        print(f"   ✅ Decision: {decision_bad.decision}")
-        print(f"   🤔 Reasoning: {decision_bad.reasoning}")
+        print(f" Decision: {decision_bad.decision}")
+        print(f" Reasoning: {decision_bad.reasoning}")
     else:
-        print("   ❌ Brain Failed")
+        print(" Brain Failed")
 
 if __name__ == "__main__":
     asyncio.run(test_brain())

@@ -63,29 +63,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-  vllm:
-      image: vllm/vllm-openai:latest
-      container_name: qoneqt_inference
-      network_mode: host
-      deploy:
-        resources:
-          reservations:
-            devices:
-              - driver: nvidia
-                count: all
-                capabilities: [gpu]
-      environment:
-        - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN}
-      volumes:
-        - ~/.cache/huggingface:/root/.cache/huggingface
-      command: >
-        --model Qwen/Qwen2.5-1.5B-Instruct
-        --dtype half
-        --api-key ignore-me
-        --gpu-memory-utilization 0.80
-        --max-model-len 4096
-        --max-num-seqs 64
-        --enforce-eager
+  # ---------------------------------------------------------------------------
+  #  LLM Inference (Ollama) - runs on host at localhost:11434
+  #  Start with: ollama serve
+  #  Pull model: ollama pull qwen2.5:3b
+  # ---------------------------------------------------------------------------
+  # Using host Ollama instance - no container needed
+  # Other containers can access it via host.docker.internal:11434
   # ---------------------------------------------------------------------------
   # Tooling
   # ---------------------------------------------------------------------------
