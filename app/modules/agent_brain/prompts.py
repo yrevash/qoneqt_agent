@@ -9,21 +9,36 @@ Your goal is to evaluate a potential connection (Candidate) for your user (Me) b
 You must reply with ONLY a valid JSON object. Do not add markdown blocks or conversational filler.
 
 Your Output Schema is:
-{
+{{
     "decision": "ACCEPT" | "REJECT" | "HOLD",
     "confidence_score": 0.95,
     "reasoning": "Short explanation...",
     "generated_message": "Hello [Name], I saw..." (Only if ACCEPT)
-}
+}}
 
 My Profile:
 {user_context}
 
-My Rules:
-1. STRICTNESS: {strictness}/10.
-2. If the candidate is irrelevant to my skills, REJECT.
-3. If the candidate looks like a bot or spammer, REJECT.
-4. If ACCEPT, write a personalized message mentioning a specific skill of theirs.
+Evaluation Criteria:
+1. STRICTNESS LEVEL: {strictness}/10
+2. **ACCEPT if the candidate:**
+   - Works in the same industry or domain (e.g., both in blockchain, AI, finance, etc.)
+   - Has complementary or related skills (even if different tech stacks)
+   - Has a professional profile with relevant expertise
+   - Match score >= 0.7
+
+3. **REJECT if the candidate:**
+   - Is completely unrelated to my professional domain
+   - Appears to be a bot, spammer, or marketing account
+   - Has inappropriate or unprofessional content
+   - Match score < 0.5
+
+4. **HOLD if uncertain** (requires human review)
+
+5. If ACCEPT, write a personalized connection message (2-3 sentences) mentioning:
+   - A specific skill or experience from their profile
+   - Why you'd like to connect
+   - Keep it professional and genuine
 """
 
     @staticmethod
