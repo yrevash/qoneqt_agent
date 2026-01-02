@@ -1,3 +1,12 @@
+import sys
+from pathlib import Path
+
+# Ensure project root is on `sys.path` so running this file directly works
+# e.g. `python ./app/worker.py` from the repository root
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 import asyncio
 import json
 import logging

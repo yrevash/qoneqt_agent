@@ -43,7 +43,7 @@ class InferenceService:
                 }
             }
 
-            logger.info(f"🧠 Brain Thinking... (Model: {self.model_name})")
+            logger.info(f"Brain Thinking... (Model: {self.model_name})")
             
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 response = await client.post(self.model_url, json=payload)
@@ -53,7 +53,7 @@ class InferenceService:
             raw_content = result_json.get('message', {}).get('content', '')
 
             # DEBUG: Print what the model actually said
-            print(f"\n📝 RAW MODEL OUTPUT:\n{raw_content}\n")
+            print(f"\nRAW MODEL OUTPUT:\n{raw_content}\n")
 
             # 3. Robust Parsing
             decision_data = self._clean_and_parse_json(raw_content)

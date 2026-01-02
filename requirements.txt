@@ -24,3 +24,7 @@ httpx
 asyncpg
 sentence-transformers
 aio-pika
+python-jose[cryptography]
+passlib[bcrypt]
+multipart
+prometheus-fastapi-instrumentator
