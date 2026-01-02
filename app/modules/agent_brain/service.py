@@ -19,7 +19,10 @@ class InferenceService:
         # Assumption: vLLM is running at the URL defined in settings
         self.model_url = "http://vllm:8000/v1/chat/completions"
         self.model_name = "Qwen/Qwen2.5-7B-Instruct" 
-        self.headers = {"Content-Type": "application/json"}
+        self.headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer ignore-me" 
+        }
         # Timeout is crucial for production stability
         self.timeout = httpx.Timeout(30.0, connect=5.0)
 

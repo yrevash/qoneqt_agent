@@ -66,16 +66,26 @@ services:
   vllm:
       image: vllm/vllm-openai:latest
       container_name: qoneqt_inference
-      runtime: nvidia  # REQUIRES GPU. If no GPU, use "openchat/openchat" or CPU mode
-      ports:
-        - "8000:8000"
+      network_mode: host
+      deploy:
+        resources:
+          reservations:
+            devices:
+              - driver: nvidia
+                count: all
+                capabilities: [gpu]
       environment:
         - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN}
       volumes:
         - ~/.cache/huggingface:/root/.cache/huggingface
-      command: --model Qwen/Qwen2.5-7B-Instruct --dtype auto --api-key ignore-me
-      networks:
-        - qoneqt_net
+      command: >
+        --model Qwen/Qwen2.5-1.5B-Instruct
+        --dtype half
+        --api-key ignore-me
+        --gpu-memory-utilization 0.80
+        --max-model-len 4096
+        --max-num-seqs 64
+        --enforce-eager
   # ---------------------------------------------------------------------------
   # Tooling
   # ---------------------------------------------------------------------------
