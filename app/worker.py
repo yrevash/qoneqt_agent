@@ -6,91 +6,81 @@ from uuid import UUID
 
 from app.core.config import settings
 from app.core.queue import RabbitMQClient
-from app.modules.recsys.service import recsys_service
-from app.modules.identity.models import User
 from app.core.database import AsyncSessionLocal
+from app.modules.identity.models import User, AgentTrace
+from app.modules.recsys.service import recsys_service
 
-# Configure Logging
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
+# IMPORT THE NEW BRAIN
+from app.modules.agent_brain.service import inference_service
+
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("qoneqt.worker")
 
 class AgentWorker:
-    """
-    Layer 2: The Agent Worker.
-    Consumes tasks from RabbitMQ and executes the 'Brain' logic.
-    """
-
     async def start(self):
-        """
-        Connects to RabbitMQ and starts listening on multiple queues.
-        """
-        logger.info(" Agent Worker Starting...")
+        # ... (Same connection logic as before) ...
         connection = await RabbitMQClient.get_connection()
         channel = await connection.channel()
-        
-        # Set QoS to process 1 task at a time per worker instance (Prevent overload)
         await channel.set_qos(prefetch_count=1)
-
-        # Listen to both High and Low priority queues
-        queues = ["queue.high_priority", "queue.low_priority"]
         
-        for q_name in queues:
-            queue = await channel.declare_queue(q_name, durable=True)
-            await queue.consume(self.process_message)
-            logger.info(f"👂 Listening on {q_name}")
-
-        # Keep running
+        queue = await channel.declare_queue("queue.high_priority", durable=True)
+        await queue.consume(self.process_message)
+        logger.info(" Agent Worker (Inference Enabled) Listening...")
         await asyncio.Future()
 
     async def process_message(self, message: aio_pika.IncomingMessage):
-        """
-        The Core Logic: Wake Up -> Context Load -> RecSys -> Action
-        """
         async with message.process():
             try:
                 payload = json.loads(message.body)
                 agent_id_str = payload.get("agent_id")
-                tier = payload.get("tier", "free")
                 
-                logger.info(f" Agent Waking Up: {agent_id_str} (Tier: {tier})")
-                
-                # 1. LOAD CONTEXT (Who am I?)
-                agent_id = UUID(agent_id_str)
                 async with AsyncSessionLocal() as session:
-                    agent = await session.get(User, agent_id)
-                    if not agent:
-                        logger.error(f"Agent {agent_id} not found in DB.")
-                        return
+                    # 1. Hydrate Context
+                    agent = await session.get(User, UUID(agent_id_str))
+                    if not agent: return
 
-                    # 2. RUN RECSYS (Who should I talk to?)
-                    # We use the implicit context of the agent (Location, etc.)
+                    # 2. Get Candidates (Layer 3)
                     recommendations = await recsys_service.get_recommendations(
                         initiator_id=agent.id,
-                        query_text="Find me relevant connections", # Default goal
-                        limit=3,
-                        enable_smart_location=True
+                        query_text="Find relevant peers",
+                        limit=1
                     )
                     
-                    if recommendations:
-                        top_match = recommendations[0]
-                        match_name = top_match['full_name']
-                        score = top_match['match_score']
+                    if not recommendations:
+                        logger.info("No candidates found.")
+                        return
+
+                    candidate = recommendations[0]
+
+                    # 3. RUN INFERENCE (Layer 4)
+                    # Convert SQLAlchemy model to Dict for the Brain
+                    agent_profile = {
+                        "full_name": agent.full_name,
+                        "bio": agent.bio,
+                        "location": agent.location,
+                        "skills": agent.skills or []
+                    }
+                    
+                    decision = await inference_service.decide_on_candidate(
+                        agent_profile=agent_profile,
+                        candidate_profile=candidate
+                    )
+
+                    # 4. Save Trace (Observability)
+                    if decision:
+                        trace = AgentTrace(
+                            agent_id=agent.id,
+                            interaction_type="SCREENING",
+                            reasoning_log=decision.model_dump(), # Saves full JSON
+                            decision=decision.decision
+                        )
+                        session.add(trace)
+                        await session.commit()
                         
-                        logger.info(f"  Insight: Found {len(recommendations)} candidates.")
-                        logger.info(f"   Top Match: {match_name} (Score: {score})")
-                        
-                        # 3. TAKE ACTION (Simulated for Phase 4)
-                        # In Phase 5, this is where we call vLLM to generate a message.
-                        # For now, we log the 'Intent'.
-                        logger.info(f"    ACTION: Would send Hello to {match_name}")
-                    else:
-                        logger.info("   💤 No relevant matches found. Going back to sleep.")
+                        logger.info(f" Trace saved. Agent decided: {decision.decision}")
 
             except Exception as e:
-                logger.error(f" Worker Error: {e}")
+                logger.error(f"Worker Error: {e}")
 
 if __name__ == "__main__":
     worker = AgentWorker()
