@@ -28,3 +28,4 @@ python-jose[cryptography]
 passlib[bcrypt]
 multipart
 prometheus-fastapi-instrumentator
+greenlet

@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     # Ollama LLM
     OLLAMA_HOST: str = "http://localhost:11434"
     OLLAMA_MODEL: str = "qwen2.5:7b"
+    
+    # HuggingFace (optional, for vLLM)
+    HF_TOKEN: Optional[str] = None
 
     @computed_field
     def RABBITMQ_URL(self) -> str:
