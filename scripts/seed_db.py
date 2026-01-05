@@ -46,7 +46,6 @@ MOCK_USERS = [
         "role": "Researcher",
         "skills": ["Cryptography", "Math", "MPC"]
     },
-    # ---------------- INDIAN DEV SCENARIO ----------------
     {
         "name": "Rohan React", 
         "bio": "Frontend wizard specializing in Web3 integrations. Love building clean UI for DeFi protocols.",
@@ -110,7 +109,7 @@ async def seed():
             count += 1
         
         await session.commit()
-        print(f"✅ Database Seeded Successfully! ({count} New Users Created)")
+        print(f"Database Seeded Successfully! ({count} New Users Created)")
 
 if __name__ == "__main__":
     asyncio.run(seed())
