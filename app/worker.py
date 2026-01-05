@@ -4,6 +4,9 @@ import logging
 import aio_pika
 from uuid import UUID
 from sqlalchemy import select
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from app.core.config import settings
 from app.core.queue import RabbitMQClient
@@ -45,7 +48,8 @@ class AgentWorker:
                     recommendations = await recsys_service.get_recommendations(
                         initiator_id=agent.id,
                         query_text=user_query, # Use specific query for vector search
-                        limit=3
+                        limit=3,
+                        enable_smart_location=False
                     )
                     
                     if not recommendations:

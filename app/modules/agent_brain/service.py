@@ -104,5 +104,6 @@ class InferenceService:
                 
         raise ValueError(f"Could not extract JSON. Raw content: {raw_text[:50]}...")
 
+
 # Singleton Export
 inference_service = InferenceService()
