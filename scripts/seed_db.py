@@ -4,7 +4,7 @@ import os
 import uuid
 from sqlalchemy import select
 
-sys.path.append(os.getcwd())
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from app.core.database import AsyncSessionLocal
 from app.modules.identity.models import User

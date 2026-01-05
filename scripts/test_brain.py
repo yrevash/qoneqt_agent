@@ -3,7 +3,7 @@ import sys
 import os
 
 # Add project root to path
-sys.path.append(os.getcwd())
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from app.modules.agent_brain.service import inference_service
 
