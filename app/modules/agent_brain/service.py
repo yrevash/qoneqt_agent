@@ -24,11 +24,12 @@ class InferenceService:
     async def decide_on_candidate(
         self, 
         agent_profile: Dict[str, Any], 
-        candidate_profile: Dict[str, Any]
+        candidate_profile: Dict[str, Any],
+        user_query: str
     ) -> Optional[AgentDecision]:
         try:
             # 1. Build Prompt
-            messages = PromptTemplates.build_screener_prompt(agent_profile, candidate_profile)
+            messages = PromptTemplates.build_screener_prompt(agent_profile, candidate_profile,user_query)
             
             # 2. Call Ollama
             payload = {

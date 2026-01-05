@@ -44,40 +44,41 @@ Evaluation Criteria:
     @staticmethod
     def build_screener_prompt(
         user_profile: Dict[str, Any],
-        candidate_profile: Dict[str, Any]
+        candidate_profile: Dict[str, Any],
+        user_query: str  
     ) -> list:
-        """
-        Constructs the ChatML messages list for Qwen.
-        """
-        # 1. Format the User Context for the System Prompt
-        user_context_str = (
-            f"Name: {user_profile.get('full_name')}\n"
-            f"Bio: {user_profile.get('bio')}\n"
-            f"Location: {user_profile.get('location')}\n"
-            f"Skills: {', '.join(user_profile.get('skills', []))}"
-        )
         
-        # 2. Format the Candidate for the User Prompt
+        # 1. Format the Candidate for the User Prompt
         candidate_str = (
             f"Candidate Name: {candidate_profile.get('full_name')}\n"
             f"Bio: {candidate_profile.get('bio')}\n"
             f"Location: {candidate_profile.get('location')}\n"
-            f"Match Score: {candidate_profile.get('match_score')}\n"
             f"Skills: {', '.join(candidate_profile.get('skills', []))}"
         )
 
+        # 2. Dynamic System Prompt
+        system_content = f"""You are an expert AI Connecting working for {user_profile.get('full_name')}.
+
+YOUR CURRENT MISSION:
+The user specifically asked: "{user_query}"
+
+YOUR TASK:
+Evaluate if the candidate below is a good match for this SPECIFIC request.
+- If the user wants a "Rust Dev" and the candidate is a "React Dev", ACCEPT.
+- If the user wants "Investors" and the candidate is a "Student", REJECT.
+
+Output JSON:
+{{
+    "decision": "ACCEPT" | "REJECT",
+    "confidence_score": 0.9,
+    "reasoning": "Why they fit the query '{user_query}'...",
+    "generated_message": "Draft a short connection request mentioning their specific relevant skills."
+}}
+"""
+
         messages = [
-            {
-                "role": "system", 
-                "content": PromptTemplates.SYSTEM_SCREENER_V1.format(
-                    user_context=user_context_str,
-                    strictness=7  # Default strictness
-                )
-            },
-            {
-                "role": "user", 
-                "content": f"Evaluate this candidate:\n\n{candidate_str}"
-            }
+            {"role": "system", "content": system_content},
+            {"role": "user", "content": f"Candidate Profile:\n{candidate_str}"}
         ]
         
         return messages
