@@ -45,3 +45,5 @@ redis_data/
 # Personal notes
 MASTER.md
 DEPLOYMENT.md
+KEYS
+LRANGE
