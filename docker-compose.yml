@@ -195,10 +195,23 @@ services:
     restart: always
     volumes:
       - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./infra/prometheus/alert.rules.yml:/etc/prometheus/alerts.rules.yml 
     ports:
       - "9090:9090"
     extra_hosts:
-      - "host.docker.internal:host-gateway" # Allows access to uvicorn on host
+      - "host.docker.internal:host-gateway"
+    networks:
+      - qoneqt_net
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: qoneqt_alertmanager
+    restart: always
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./infra/alertmanager/config.yml:/etc/alertmanager/config.yml
+    command: --config.file=/etc/alertmanager/config.yml
     networks:
       - qoneqt_net
 

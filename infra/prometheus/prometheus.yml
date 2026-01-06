@@ -1,11 +1,20 @@
 global:
   scrape_interval: 5s
+  evaluation_interval: 15s # How often to check the alert rules
+
+# 1. Load the Rules
+rule_files:
+  - "alert.rules.yml"
+
+# 2. Talk to Alertmanager
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - 'alertmanager:9093'
 
 scrape_configs:
   - job_name: 'qoneqt_api'
     metrics_path: '/metrics'
     static_configs:
-      # 'app' is the docker service name. 
-      # Since we are running uvicorn on host, use 'host.docker.internal'
-      # If you move uvicorn to docker later, change this to 'app:8000'
       - targets: ['host.docker.internal:8080']

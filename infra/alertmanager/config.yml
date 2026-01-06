@@ -1,0 +1,20 @@
+global:
+  # Replace with your SMTP details
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'your-system-email@gmail.com'
+  smtp_auth_username: 'your-system-email@gmail.com'
+  smtp_auth_password: 'your-google-app-password' # Use App Password, NOT login password
+  smtp_require_tls: true
+
+route:
+  group_by: ['alertname']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 3h
+  receiver: 'email-admin'
+
+receivers:
+  - name: 'email-admin'
+    email_configs:
+      - to: 'your-personal-email@gmail.com'
+        send_resolved: true # Sends another email when the service comes back UP

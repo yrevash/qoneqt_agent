@@ -1,0 +1,22 @@
+groups:
+  - name: qoneqt_infra_alerts
+    rules:
+      # Alert if any target (API, etc.) goes down for 1 minute
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Instance {{ $labels.instance }} is down"
+          description: "{{ $labels.instance }} of job {{ $labels.job }} has been unreachable for > 1 minute."
+
+      # Alert if API Latency is too high (> 2 seconds)
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 2
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Latency on {{ $labels.instance }}"
+          description: "P95 Latency is {{ $value }}s (Threshold: 2.0s)."
