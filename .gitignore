@@ -1,14 +1,47 @@
+# Environment variables (real secrets)
 .env
+.env.example
+# Python
 venv/
-alembic.ini
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
 app/__pycache__/
 app/core/__pycache__/
 app/modules/identity/__pycache__/
 app/modules/recsys/__pycache__/
 alembic/versions/__pycache__/
-__pycache__/
 alemvic/__pycache__
-MASTER.md
+
+# Alembic - keep in version control for production
+# alembic.ini
+
+# Frontend
+qoneqt_web/node_modules/
+qoneqt_web/.next/
+qoneqt_web/out/
 qoneqt_web/yarn.lock
 qoneqt_web/package-lock.json
-qoneqt_web/node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker volumes data
+postgres_data/
+redis_data/
+
+# Logs
+*.log
+
+# Personal notes
+MASTER.md
+DEPLOYMENT.md
