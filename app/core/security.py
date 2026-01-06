@@ -43,7 +43,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
         raise credentials_exception
 
     async with AsyncSessionLocal() as session:
-        user = await session.get(User, user_id)
+        from uuid import UUID
+        user = await session.get(User, UUID(user_id))
         if user is None:
             raise credentials_exception
+        # Properly expunge from session so it can be used after session closes
+        session.expunge(user)
         return user

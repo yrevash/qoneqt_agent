@@ -47,8 +47,8 @@ class AgentWorker:
                     # 2. RUN RECSYS
                     recommendations = await recsys_service.get_recommendations(
                         initiator_id=agent.id,
-                        query_text=user_query, # Use specific query for vector search
-                        limit=3,
+                        query_text=user_query,  # Use specific query for vector search
+                        limit=10,  # Scan more candidates for better matches
                         enable_smart_location=False
                     )
                     
@@ -70,17 +70,32 @@ class AgentWorker:
                             logger.info(f"Skipping {candidate_data['full_name']} (Already connected/pending)")
                             continue
 
-                        # 4. THE BRAIN (Context-Aware)
-                        decision = await inference_service.decide_on_candidate(
-                            agent_profile={
-                                "full_name": agent.full_name,
-                                "bio": agent.bio,
-                                "location": agent.location,
-                                "skills": agent.skills
-                            },
-                            candidate_profile=candidate_data,
-                            user_query=user_query 
-                        )
+                    # 4. THE BRAIN (Context-Aware)
+                        try:
+                            decision = await inference_service.decide_on_candidate(
+                                agent_profile={
+                                    "full_name": agent.full_name,
+                                    "bio": agent.bio,
+                                    "location": agent.location,
+                                    "skills": agent.skills
+                                },
+                                candidate_profile=candidate_data,
+                                user_query=user_query 
+                            )
+                        except Exception as brain_error:
+                            logger.error(f"Brain failure for {candidate_data['full_name']}: {brain_error}")
+                            # Save error trace
+                            error_trace = AgentTrace(
+                                agent_id=agent.id,
+                                target_id=candidate_id,
+                                request_id=trace_id,
+                                interaction_type="SCREENING_ERROR",
+                                reasoning_log={"error": str(brain_error), "candidate": candidate_data['full_name']},
+                                decision="ERROR"
+                            )
+                            session.add(error_trace)
+                            await session.commit()
+                            continue
 
                         if decision:
                             logger.info(f"Verdict on {candidate_data['full_name']}: {decision.decision}")
@@ -111,7 +126,7 @@ class AgentWorker:
                             await session.commit()
 
             except Exception as e:
-                logger.error(f"Worker Error: {e}")
+                logger.error(f"Worker Error: {e}", exc_info=True)
 
 if __name__ == "__main__":
     worker = AgentWorker()

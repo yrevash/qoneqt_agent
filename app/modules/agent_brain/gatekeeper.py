@@ -1,6 +1,7 @@
 import json
 import logging
-from app.modules.agent_brain.inference import llm_client
+import httpx
+from app.core.config import settings
 
 logger = logging.getLogger("qoneqt.gatekeeper")
 
@@ -10,19 +11,22 @@ class GatekeeperService:
     Protects the system from junk, spam, and non-networking requests.
     """
     
-    SYSTEM_PROMPT = """You are a Gatekeeper for a Professional Networking AI.
-Your ONLY job is to classify if a user's input is a valid networking search request.
+    SYSTEM_PROMPT = """You are a Gatekeeper for a Networking AI Agent.
+Your ONLY job is to classify if a user's input is a valid search request to find and connect with people.
 
-VALID Criteria:
-- Asking to find, connect, or hire someone.
-- Asking for introductions to specific roles (Devs, Investors, etc).
-- Looking for people in specific industries.
+VALID Criteria (ALLOW THESE):
+- Looking for ANY type of person (professionals, athletes, artists, gamers, creators, etc.)
+- Asking to find, connect with, or meet someone
+- Searching by role, skill, interest, hobby, or any personal attribute
+- Examples: "find investors", "connect with football players", "find AI engineers", "gamers who play Valorant"
 
-INVALID Criteria (JUNK):
-- Greetings ("Hi", "Hello").
-- Gibberish ("asdf", "test").
-- Task requests ("Write code", "Summarize this").
-- General knowledge questions ("What is Bitcoin?").
+INVALID Criteria (BLOCK THESE - VERY FEW):
+- Pure greetings with no request ("Hi", "Hello")
+- Complete gibberish ("asdf", "xkjdhf")
+- Task requests unrelated to finding people ("Write code", "Summarize this article")
+- Questions about the system itself ("How do you work?")
+
+BE PERMISSIVE. This is a NETWORKING tool - people want to connect with ALL types of people, not just professionals.
 
 OUTPUT FORMAT:
 Reply with ONLY a JSON object: {"status": "ALLOWED"} or {"status": "BLOCKED", "reason": "Short reason..."}
@@ -36,18 +40,33 @@ Reply with ONLY a JSON object: {"status": "ALLOWED"} or {"status": "BLOCKED", "r
             return {"status": "BLOCKED", "reason": "Query too short."}
 
         try:
-            # We use a very low temperature for strict classification
-            response = await llm_client.generate(
-                prompt=f"User Query: {query}",
-                system=self.SYSTEM_PROMPT,
-                temperature=0.0,
-                max_tokens=50
-            )
+            # Use Ollama's chat endpoint for classification
+            payload = {
+                "model": settings.OLLAMA_MODEL,
+                "messages": [
+                    {"role": "system", "content": self.SYSTEM_PROMPT},
+                    {"role": "user", "content": f"User Query: {query}"}
+                ],
+                "stream": False,
+                "format": "json",
+                "options": {
+                    "temperature": 0.0,
+                    "num_predict": 50
+                }
+            }
             
-            # Simple parsing (assuming the model follows the strict JSON instruction)
-            # In a prod environment, we'd use the robust parser, but this needs to be fast.
-            # We strip markdown just in case.
-            clean_resp = response.replace("```json", "").replace("```", "").strip()
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.post(
+                    f"{settings.OLLAMA_HOST}/api/chat",
+                    json=payload
+                )
+                response.raise_for_status()
+                
+            result_json = response.json()
+            raw_content = result_json.get('message', {}).get('content', '')
+            
+            # Simple parsing (strip markdown if present)
+            clean_resp = raw_content.replace("```json", "").replace("```", "").strip()
             result = json.loads(clean_resp)
             
             if result.get("status") == "ALLOWED":
@@ -57,8 +76,7 @@ Reply with ONLY a JSON object: {"status": "ALLOWED"} or {"status": "BLOCKED", "r
 
         except Exception as e:
             logger.error(f"Gatekeeper Error: {e}")
-            # Fail-safe: If Gatekeeper crashes, do we block or allow? 
-            # Safe mode = Block to save credits. Permissive = Allow.
+            # Fail-safe: Block on error to save credits
             return {"status": "BLOCKED", "reason": "Gatekeeper unavailable."}
 
 gatekeeper_service = GatekeeperService()

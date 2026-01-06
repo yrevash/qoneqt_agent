@@ -13,7 +13,7 @@ app = FastAPI(
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Allow all origins for dev tunnels
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -25,10 +25,6 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 # --- LAYER 5: OBSERVABILITY ---
 # This automatically tracks latency, request count, and errors
 Instrumentator().instrument(app).expose(app)
-
-@app.get("/")
-async def root():
-    return {"message": "Qoneqt Agent Network API is Live 🟢"}
 
 from fastapi.responses import HTMLResponse
 

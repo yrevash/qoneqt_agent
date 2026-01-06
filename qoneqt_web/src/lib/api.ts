@@ -2,7 +2,8 @@
 import axios from "axios";
 
 // Pointing to your FastAPI Backend
-const API_URL = "http://localhost:8080/api/v1";
+// Use environment variable or fallback to localhost
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
 
 // Create a configured instance
 export const api = axios.create({
@@ -12,21 +13,86 @@ export const api = axios.create({
   },
 });
 
-// Add your Hardcoded Token for Dev (or implement login later)
-// Token generated for: Alice Rust (alice@qoneqt.com)
-const DEV_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhY2M1MmU1ZC04M2VmLTRlNDAtYTFmMi1lMGNjNGQ5OGFmYWIiLCJleHAiOjE3Njc2MzY3NTB9.PUKi0O_m6NKoU1ZgStTi16kXbETb0oPyjY9zE-aSRoM"; 
+// Token management
+let currentToken: string | null = null;
 
+export const setAuthToken = (token: string) => {
+  currentToken = token;
+  localStorage.setItem("auth_token", token);
+};
+
+export const getAuthToken = () => {
+  if (!currentToken) {
+    currentToken = localStorage.getItem("auth_token");
+  }
+  return currentToken;
+};
+
+export const clearAuthToken = () => {
+  currentToken = null;
+  localStorage.removeItem("auth_token");
+  localStorage.removeItem("current_user");
+};
+
+// Add auth token to requests
 api.interceptors.request.use((config) => {
-  config.headers.Authorization = `Bearer ${DEV_TOKEN}`;
+  const token = getAuthToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   return config;
 });
 
+export const authApi = {
+  // Select which user to control
+  selectUser: (userId: string) => 
+    api.post("/auth/select-user", { user_id: userId }),
+  
+  // Create new user
+  createUser: (data: {
+    email: string;
+    full_name: string;
+    bio?: string;
+    location?: string;
+    role?: string;
+    skills?: string[];
+  }) => api.post("/users/create", data),
+  
+  // List all users - NO AUTH REQUIRED
+  listUsers: () => api.get("/users"),
+  
+  // Get current user
+  getCurrentUser: () => api.get("/users/me"),
+};
+
 export const agentApi = {
-  // The Trigger
+  // Trigger agent search
   triggerSearch: (query: string) => 
     api.post("/agent/trigger", { query, intent: "frontend_search" }),
 
-  // The Feed
-  getFeed: () => 
-    api.get("/agent/feed"),
+  // Get agent feed
+  getFeed: (offset = 0) => 
+    api.get("/agent/feed", { params: { limit: 20, offset } }),
+  
+  // Get energy balance
+  getEnergy: () => api.get("/energy"),
+  
+  // Reset energy (admin)
+  resetEnergy: (userId?: string) => 
+    api.post("/admin/reset-energy", { user_id: userId }),
+};
+
+export const connectionApi = {
+  // Get connections
+  getConnections: (status?: string) => 
+    api.get("/connections", { params: { status_filter: status } }),
+  
+  // Respond to connection
+  respondToConnection: (connectionId: string, action: "ACCEPT" | "REJECT") =>
+    api.post(`/connections/${connectionId}/respond`, null, { params: { action } }),
+};
+
+export const adminApi = {
+  // Get all users (no auth)
+  getAllUsers: () => api.get("/admin/users"),
 };

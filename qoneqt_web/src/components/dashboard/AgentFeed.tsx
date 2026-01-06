@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { agentApi } from "@/lib/api";
+import { agentApi, getAuthToken } from "@/lib/api";
 import { FeedItem } from "@/lib/types";
 import { CheckCircle, XCircle, Clock, RefreshCw } from "lucide-react";
 
@@ -10,6 +10,9 @@ export default function AgentFeed({ refreshKey }: { refreshKey: number }) {
   const [feed, setFeed] = useState<FeedItem[]>([]);
 
   const fetchFeed = useCallback(async () => {
+    // Only fetch if user is authenticated
+    if (!getAuthToken()) return;
+    
     try {
       const res = await agentApi.getFeed();
       setFeed(res.data);

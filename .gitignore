@@ -8,3 +8,7 @@ app/modules/recsys/__pycache__/
 alembic/versions/__pycache__/
 __pycache__/
 alemvic/__pycache__
+MASTER.md
+qoneqt_web/yarn.lock
+qoneqt_web/package-lock.json
+qoneqt_web/node_modules/

@@ -67,7 +67,8 @@ class RecSysService:
             
             stmt = select(User, distance_col).where(
                 User.id != initiator_id,
-                User.is_active == True
+                User.is_active == True,
+                User.interest_vector.is_not(None)  # Only users with embeddings
             )
 
             # Apply Location Filter (if resolved)
@@ -114,6 +115,7 @@ class RecSysService:
                     "bio": candidate.bio,
                     "location": candidate.location,
                     "role": candidate.role,
+                    "skills": candidate.skills or [],  # Include skills array
                     "match_score": final_score,
                     # Debug info is crucial for refining the algorithm later
                     "_debug": {

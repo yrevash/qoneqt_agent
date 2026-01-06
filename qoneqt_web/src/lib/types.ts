@@ -18,3 +18,31 @@ export interface TriggerResponse {
   energy_remaining: number;
   message?: string;
 }
+
+export interface User {
+  id: string;
+  email: string;
+  full_name: string;
+  bio?: string;
+  location?: string;
+  role?: string;
+  skills?: string[];
+  created_at: string;
+}
+
+export interface Connection {
+  id: string;
+  initiator_id: string;
+  receiver_id: string;
+  status: string;
+  created_at: string;
+  other_user_name?: string;
+  other_user_bio?: string;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  token_type: string;
+  user_id: string;
+  full_name: string;
+}

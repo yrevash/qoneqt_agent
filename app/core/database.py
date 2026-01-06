@@ -5,8 +5,10 @@ from app.core.config import settings
 # Create the Async Engine
 engine = create_async_engine(
     str(settings.SQLALCHEMY_DATABASE_URI),
-    echo=True,  # to see the logging of the sql
-    future=True
+    echo=False,  # Disable in production to reduce log spam
+    future=True,
+    pool_size=20,  # Connection pooling for better performance
+    max_overflow=40
 )
 
 # Create the Session Factory

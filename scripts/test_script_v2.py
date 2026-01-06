@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from app.core.database import AsyncSessionLocal
 from app.modules.identity.models import User
 from app.modules.recsys.service import recsys_service
+from app.modules.recsys.embedding import embedding_service
 
 async def get_or_create_test_agent(session, name, location=None):
     """Helper to get a user for testing context."""
@@ -17,12 +18,16 @@ async def get_or_create_test_agent(session, name, location=None):
     user = result.scalars().first()
     
     if not user:
+        bio = "Temporary test user"
+        vector = embedding_service.get_embedding(bio)
+        
         user = User(
             id=uuid.uuid4(),
             email=f"temp_{name.lower().replace(' ', '_')}@test.com",
             full_name=name,
             location=location,
-            bio="Temporary test user",
+            bio=bio,
+            interest_vector=vector,  # Populate vector
             is_active=True
         )
         session.add(user)

@@ -62,11 +62,11 @@ class InferenceService:
             # 4. Validate with Pydantic
             validated_decision = AgentDecision(**decision_data)
             
-            logger.info(f"✅ Decision: {validated_decision.decision}")
+            logger.info(f"Decision: {validated_decision.decision}")
             return validated_decision
 
         except Exception as e:
-            logger.error(f"❌ Brain Failure: {e}")
+            logger.error(f"Brain Failure: {e}")
             return None
 
     def _clean_and_parse_json(self, raw_text: str) -> Dict:

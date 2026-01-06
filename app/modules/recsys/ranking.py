@@ -1,5 +1,6 @@
 import math
 from datetime import datetime
+from typing import Optional
 
 class RankingEngine:
     """
@@ -12,19 +13,23 @@ class RankingEngine:
     @staticmethod
     def calculate_score(
         cosine_distance: float, 
-        last_active_at: datetime, 
+        last_active_at: Optional[datetime], 
         fan_count: int
     ) -> float:
         # 1. Semantic Similarity (Converted from Distance)
         # PGVector Cosine Distance is (1 - Cosine Similarity).
         # Range: 0.0 (Identical) to 2.0 (Opposite).
         # We clamp it to ensure we get a 0.0-1.0 similarity score.
-        raw_similarity = 1.0 - cosine_distance
-        similarity_score = max(0.0, min(1.0, raw_similarity))
+        # Handle None case (shouldn't happen, but defensive programming)
+        if cosine_distance is None:
+            similarity_score = 0.0
+        else:
+            raw_similarity = 1.0 - cosine_distance
+            similarity_score = max(0.0, min(1.0, raw_similarity))
 
         # 2. Recency Decay (Sigmoid Decay)
         # Users active within 7 days get ~1.0. Users inactive for 90 days get ~0.1.
-        if last_active_at:
+        if last_active_at is not None:
             days_inactive = (datetime.utcnow() - last_active_at).days
             # Logic: 1 / (1 + days/30) -> Slow decay
             recency_score = 1.0 / (1.0 + (max(0, days_inactive) / 30.0))
