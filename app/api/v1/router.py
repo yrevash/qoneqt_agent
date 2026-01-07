@@ -291,6 +291,37 @@ async def list_users(
         for u in users
     ]
 
+@api_router.post("/auth/select", response_model=Token)
+async def select_user(user_id: str, db: AsyncSession = Depends(get_db)):
+    """Select a user to control (no password needed - for agent control)"""
+    user = await db.get(User, user_id)
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+    
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is inactive",
+        )
+
+    # Initialize energy if not exists
+    energy = await RedisClient.check_energy(str(user.id))
+    if energy <= 0:
+        await RedisClient.get_instance().set(f"user:energy:{user.id}", 100)
+
+    access_token = create_access_token(data={"sub": str(user.id)})
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user_id": str(user.id),
+        "full_name": user.full_name
+    }
+
 @api_router.get("/connections", response_model=List[ConnectionItem])
 async def get_connections(
     status_filter: Optional[str] = None,

@@ -4,7 +4,7 @@ global:
 
 # 1. Load the Rules
 rule_files:
-  - "alert.rules.yml"
+  - "alerts.rules.yml"
 
 # 2. Talk to Alertmanager
 alerting:

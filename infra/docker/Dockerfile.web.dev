@@ -1,0 +1,20 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY qoneqt_web/package.json qoneqt_web/package-lock.json* ./
+
+# Install dependencies
+RUN npm install
+
+# Copy source code
+COPY qoneqt_web/ .
+
+EXPOSE 3000
+
+ENV PORT=3000
+ENV NODE_ENV=development
+
+# Run in development mode with hot reload
+CMD ["npm", "run", "dev"]

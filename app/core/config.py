@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     #Redis
     REDIS_HOST: str
     REDIS_PORT: int = 6379
+    
     # RabbitMQ
     RABBITMQ_USER: str = "guest"
     RABBITMQ_PASSWORD: str = "guest"
@@ -31,6 +32,29 @@ class Settings(BaseSettings):
     
     # HuggingFace (optional, for vLLM)
     HF_TOKEN: Optional[str] = None
+
+    # Notification Settings - Email
+    SMTP_HOST: Optional[str] = None
+    SMTP_PORT: Optional[int] = None
+    SMTP_USER: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
+    
+    # Notification Settings - Slack
+    SLACK_WEBHOOK_URL: Optional[str] = None
+    
+    # Notification Settings - Telegram
+    TELEGRAM_BOT_TOKEN: Optional[str] = None
+    TELEGRAM_CHAT_ID: Optional[str] = None
+    
+    # Notification Settings - Twilio (SMS)
+    TWILIO_ACCOUNT_SID: Optional[str] = None
+    TWILIO_AUTH_TOKEN: Optional[str] = None
+    TWILIO_FROM_NUMBER: Optional[str] = None
+    
+    # Logging Settings
+    LOG_LEVEL: str = "INFO"
+    LOG_DIR: str = "logs"
+    ENABLE_JSON_LOGGING: bool = True
 
     @computed_field
     def RABBITMQ_URL(self) -> str:

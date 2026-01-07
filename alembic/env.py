@@ -12,6 +12,7 @@ from app.core.config import settings
 from app.core.database import Base
 # Must import the models so Base.metadata populates!
 from app.modules.identity import models 
+from app.modules.admin import models as admin_models 
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

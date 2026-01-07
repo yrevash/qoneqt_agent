@@ -30,3 +30,4 @@ multipart
 prometheus-fastapi-instrumentator
 greenlet
 pydantic[email]
+aiohttp

@@ -1,7 +1,4 @@
 services:
-  # ---------------------------------------------------------------------------
-  #  The Consolidated "Truth" DB (Postgres + pgvector)
-  # ---------------------------------------------------------------------------
   db:
     image: pgvector/pgvector:pg16
     container_name: qoneqt_db
@@ -149,7 +146,7 @@ services:
   web:
     build:
       context: .
-      dockerfile: infra/docker/Dockerfile.web
+      dockerfile: infra/docker/Dockerfile.web.dev
       args:
         - NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
     container_name: qoneqt_web
@@ -162,6 +159,11 @@ services:
       - qoneqt_net
     depends_on:
       - api
+    # Removed volumes for development - rebuild container for code changes
+    # volumes:
+    #   - ./qoneqt_web:/app
+    #   - /app/node_modules
+    #   - /app/.next
 
   # ---------------------------------------------------------------------------
   #  LLM Inference (Ollama) - runs on host at localhost:11434
@@ -195,7 +197,7 @@ services:
     restart: always
     volumes:
       - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./infra/prometheus/alert.rules.yml:/etc/prometheus/alerts.rules.yml 
+      - ./infra/prometheus/alerts.rules.yml:/etc/prometheus/alerts.rules.yml 
     ports:
       - "9090:9090"
     extra_hosts:
@@ -209,9 +211,16 @@ services:
     restart: always
     ports:
       - "9093:9093"
+    environment:
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com:587}
+      - SMTP_FROM=${SMTP_FROM}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
     volumes:
       - ./infra/alertmanager/config.yml:/etc/alertmanager/config.yml
-    command: --config.file=/etc/alertmanager/config.yml
+    command: 
+      - '--config.file=/etc/alertmanager/config.yml'
+      - '--log.level=debug'
     networks:
       - qoneqt_net
 

@@ -1,22 +1,135 @@
 groups:
   - name: qoneqt_infra_alerts
+    interval: 15s
     rules:
-      # Alert if any target (API, etc.) goes down for 1 minute
+      # Critical: Service Down
       - alert: ServiceDown
         expr: up == 0
-        for: 1m
+        for: 30s
+        labels:
+          severity: critical
+          alertname: ServiceDown
+        annotations:
+          summary: "🚨 CRITICAL: {{ $labels.instance }} is DOWN"
+          description: "{{ $labels.instance }} of job {{ $labels.job }} has been unreachable for > 30 seconds."
+          timestamp: "{{ $value }}"
+
+      # Critical: Database Connection Lost
+      - alert: DatabaseConnectionLost
+        expr: pg_up == 0
+        for: 30s
         labels:
           severity: critical
         annotations:
-          summary: "Instance {{ $labels.instance }} is down"
-          description: "{{ $labels.instance }} of job {{ $labels.job }} has been unreachable for > 1 minute."
+          summary: "🚨 Database Connection Lost"
+          description: "PostgreSQL database is unreachable."
 
-      # Alert if API Latency is too high (> 2 seconds)
+      # Critical: Redis Down
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "🚨 Redis is DOWN"
+          description: "Redis cache service is unreachable."
+
+      # Critical: RabbitMQ Down
+      - alert: RabbitMQDown
+        expr: rabbitmq_up == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "🚨 RabbitMQ is DOWN"
+          description: "RabbitMQ message queue is unreachable."
+
+      # Warning: High API Latency
       - alert: HighLatency
         expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 2
         for: 2m
         labels:
           severity: warning
         annotations:
-          summary: "High Latency on {{ $labels.instance }}"
+          summary: "⚠️ High API Latency"
           description: "P95 Latency is {{ $value }}s (Threshold: 2.0s)."
+
+      # Warning: High CPU Usage
+      - alert: HighCPUUsage
+        expr: rate(process_cpu_seconds_total[5m]) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠️ High CPU Usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value | humanizePercentage }}."
+
+      # Warning: High Memory Usage
+      - alert: HighMemoryUsage
+        expr: (process_resident_memory_bytes / process_virtual_memory_max_bytes) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠️ High Memory Usage on {{ $labels.instance }}"
+          description: "Memory usage is above 85%."
+
+      # Warning: High Error Rate
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠️ High Error Rate"
+          description: "Error rate is {{ $value | humanizePercentage }} (>5%)."
+
+      # Warning: Queue Backlog
+      - alert: QueueBacklog
+        expr: rabbitmq_queue_messages > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠️ Large Queue Backlog"
+          description: "{{ $labels.queue }} has {{ $value }} pending messages."
+
+      # Warning: Slow Worker Processing
+      - alert: SlowWorkerProcessing
+        expr: rate(worker_tasks_processed_total[5m]) < 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠️ Slow Worker Processing"
+          description: "Worker processing rate is below 1 task/min."
+
+      # Critical: Disk Space Low
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "🚨 Disk Space Critical"
+          description: "Disk space is below 10% on {{ $labels.instance }}."
+
+      # Warning: AI Model Unavailable
+      - alert: AIModelUnavailable
+        expr: ollama_up == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠️ AI Model Service Unavailable"
+          description: "Ollama AI service is not responding."
+
+      # Warning: Connection Success Rate Low
+      - alert: LowConnectionSuccessRate
+        expr: rate(agent_connections_created_total[10m]) / rate(agent_connection_attempts_total[10m]) < 0.3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠️ Low Connection Success Rate"
+          description: "Connection success rate is {{ $value | humanizePercentage }}."

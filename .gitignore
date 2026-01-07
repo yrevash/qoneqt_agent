@@ -1,6 +1,6 @@
 # Environment variables (real secrets)
 .env
-.env.example
+
 # Python
 venv/
 __pycache__/
@@ -47,3 +47,4 @@ MASTER.md
 DEPLOYMENT.md
 KEYS
 LRANGE
+infra/alertmanager/config.yml.backup
