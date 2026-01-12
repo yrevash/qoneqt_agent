@@ -10,10 +10,10 @@ global:
   # - SMTP_USERNAME
   # - SMTP_PASSWORD
   
-  smtp_smarthost: '${SMTP_HOST:-smtp.gmail.com:587}'
-  smtp_from: '${SMTP_FROM}'
-  smtp_auth_username: '${SMTP_USERNAME}'
-  smtp_auth_password: '${SMTP_PASSWORD}'
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'yashtiwari9182@gmail.com'
+  smtp_auth_username: 'yashtiwari9182@gmail.com'
+  smtp_auth_password: 'dnim lwwy auml uoke'
   smtp_require_tls: true
 
 # Route configuration with severity-based routing
